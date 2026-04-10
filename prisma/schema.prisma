@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model LostFoundItem {
+  id                  String   @id @default(uuid())
+  guestName           String
+  checkIn             DateTime
+  checkOut            DateTime
+  itemName            String
+  itemPhoto           String   @default("")
+  roomNumber          String
+  remark              String
+  createdBy           String
+  pickupHandle        String
+  pickupDocumentation String
+  status              String
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@map("lost_found_items")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String?
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("users")
+}
+
+model PickupHandle {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("pickup_hadles")
+}
