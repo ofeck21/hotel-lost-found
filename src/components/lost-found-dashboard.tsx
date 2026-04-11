@@ -36,6 +36,32 @@ function formatDate(dateValue: string) {
   });
 }
 
+function normalizeAssetUrl(url: string) {
+  if (!url) return "";
+
+  const trimmed = url.trim();
+  if (!trimmed) return "";
+
+  if (trimmed.startsWith("/api/uploads/")) {
+    return trimmed;
+  }
+
+  if (trimmed.startsWith("/uploads/")) {
+    return `/api/uploads/${encodeURIComponent(trimmed.slice("/uploads/".length))}`;
+  }
+
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.pathname.startsWith("/uploads/")) {
+      return `/api/uploads/${encodeURIComponent(parsed.pathname.slice("/uploads/".length))}`;
+    }
+  } catch {
+    return trimmed;
+  }
+
+  return trimmed;
+}
+
 async function parseResponseBody(response: Response): Promise<Record<string, unknown> | null> {
   const raw = await response.text();
   if (!raw) return null;
@@ -559,8 +585,11 @@ export function LostFoundDashboard() {
     const toDataUrl = async (url: string): Promise<string | null> => {
       if (!url) return null;
 
+      const normalizedUrl = normalizeAssetUrl(url);
+      if (!normalizedUrl) return null;
+
       try {
-        const response = await fetch(url);
+        const response = await fetch(normalizedUrl);
         if (!response.ok) return null;
 
         const blob = await response.blob();
@@ -837,7 +866,7 @@ export function LostFoundDashboard() {
                     {item.itemPhoto ? (
                       <button
                         type="button"
-                        onClick={() => openPreviewImage(item.itemPhoto, "Foto Barang")}
+                        onClick={() => openPreviewImage(normalizeAssetUrl(item.itemPhoto), "Foto Barang")}
                         className="inline-flex items-center gap-1 text-brand-700 hover:underline"
                       >
                         <EyeIcon className="h-3.5 w-3.5" />
@@ -855,7 +884,7 @@ export function LostFoundDashboard() {
                     {item.pickupDocumentation ? (
                       <button
                         type="button"
-                        onClick={() => openPreviewImage(item.pickupDocumentation, "Dokumentasi Pengambilan")}
+                        onClick={() => openPreviewImage(normalizeAssetUrl(item.pickupDocumentation), "Dokumentasi Pengambilan")}
                         className="inline-flex items-center gap-1 text-brand-700 hover:underline"
                       >
                         <EyeIcon className="h-3.5 w-3.5" />
@@ -919,7 +948,7 @@ export function LostFoundDashboard() {
               {item.itemPhoto ? (
                 <button
                   type="button"
-                  onClick={() => openPreviewImage(item.itemPhoto, "Foto Barang")}
+                    onClick={() => openPreviewImage(normalizeAssetUrl(item.itemPhoto), "Foto Barang")}
                   className="relative mt-3 block w-full overflow-hidden rounded-lg border border-slate-200"
                   aria-label="Lihat foto barang"
                 >
@@ -946,7 +975,7 @@ export function LostFoundDashboard() {
               {item.pickupDocumentation ? (
                 <button
                   type="button"
-                  onClick={() => openPreviewImage(item.pickupDocumentation, "Dokumentasi Pengambilan")}
+                    onClick={() => openPreviewImage(normalizeAssetUrl(item.pickupDocumentation), "Dokumentasi Pengambilan")}
                   className="relative mt-3 block w-full overflow-hidden rounded-lg border border-slate-200"
                   aria-label="Lihat dokumentasi"
                 >

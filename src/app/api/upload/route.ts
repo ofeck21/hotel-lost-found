@@ -3,6 +3,7 @@ import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { isAuthenticated } from "@/lib/auth";
+import { getUploadsDir, uploadUrlFromFileName } from "@/lib/uploads";
 
 export async function POST(request: Request) {
   const authenticated = await isAuthenticated();
@@ -22,15 +23,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "Format file harus JPG, PNG, atau WEBP." }, { status: 400 });
   }
 
-  const uploadDir = path.join(process.cwd(), "public", "uploads");
+  const uploadDir = getUploadsDir();
   await mkdir(uploadDir, { recursive: true });
 
-  const ext = file.name.split(".").pop() ?? "jpg";
+  const extByType: Record<string, string> = {
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+  };
+  const ext = extByType[file.type] ?? "jpg";
   const fileName = `${randomUUID()}.${ext}`;
   const filePath = path.join(uploadDir, fileName);
 
   const bytes = await file.arrayBuffer();
   await writeFile(filePath, Buffer.from(bytes));
 
-  return NextResponse.json({ url: `/uploads/${fileName}` });
+  return NextResponse.json({ url: uploadUrlFromFileName(fileName) });
 }

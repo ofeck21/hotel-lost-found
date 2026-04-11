@@ -2,6 +2,7 @@ import { unlink } from "node:fs/promises";
 import path from "node:path";
 import { prisma } from "@/lib/prisma";
 import { LostFoundItem, LostFoundPayload } from "@/lib/types";
+import { extractUploadFileName, getUploadsDir } from "@/lib/uploads";
 
 type DbLostFoundItem = {
   id: string;
@@ -40,16 +41,25 @@ function toDomain(item: DbLostFoundItem): LostFoundItem {
 }
 
 async function deleteUploadAsset(fileUrl: string): Promise<void> {
-  if (!fileUrl || !fileUrl.startsWith("/uploads/")) {
-    return;
-  }
-
-  const fileName = path.basename(fileUrl.split("?")[0]);
+  const fileName = extractUploadFileName(fileUrl);
   if (!fileName) {
     return;
   }
 
-  const filePath = path.join(process.cwd(), "public", "uploads", fileName);
+  const references = await prisma.lostFoundItem.count({
+    where: {
+      OR: [
+        { itemPhoto: { endsWith: `/${fileName}` } },
+        { pickupDocumentation: { endsWith: `/${fileName}` } },
+      ],
+    },
+  });
+
+  if (references > 0) {
+    return;
+  }
+
+  const filePath = path.join(getUploadsDir(), fileName);
 
   try {
     await unlink(filePath);
