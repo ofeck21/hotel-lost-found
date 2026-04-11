@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { isAuthenticated } from "@/lib/auth";
-import { createItem, getAllItems } from "@/lib/store";
-import { prisma } from "@/lib/prisma";
+import { createItem, getAllItems, upsertPickupHandleName } from "@/lib/store";
 import { LostFoundPayload } from "@/lib/types";
 
 function normalizePayload(payload: Partial<LostFoundPayload>): LostFoundPayload | null {
@@ -27,7 +26,7 @@ function normalizePayload(payload: Partial<LostFoundPayload>): LostFoundPayload 
     itemPhoto: payload.itemPhoto.trim(),
     roomNumber: payload.roomNumber,
     remark: payload.remark,
-    createdBy: payload.createdBy,
+    createdBy: payload.createdBy.trim(),
     pickupHandle: payload.pickupHandle?.trim() ?? "",
     pickupDocumentation: payload.pickupDocumentation?.trim() ?? "",
     status: payload.status,
@@ -72,15 +71,11 @@ export async function POST(request: Request) {
     const newItem = await createItem(normalizedPayload);
 
     if (normalizedPayload.pickupHandle) {
-      await prisma.pickupHandle.upsert({
-        where: {
-          name: normalizedPayload.pickupHandle,
-        },
-        update: {},
-        create: {
-          name: normalizedPayload.pickupHandle,
-        },
-      });
+      await upsertPickupHandleName(normalizedPayload.pickupHandle);
+    }
+
+    if (normalizedPayload.createdBy) {
+      await upsertPickupHandleName(normalizedPayload.createdBy);
     }
 
     return NextResponse.json(newItem, { status: 201 });

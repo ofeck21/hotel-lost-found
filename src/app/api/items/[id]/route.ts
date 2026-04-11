@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { deleteItem, updateItem } from "@/lib/store";
+import { deleteItem, updateItem, upsertPickupHandleName } from "@/lib/store";
 import { isAuthenticated } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import { LostFoundPayload } from "@/lib/types";
 
 function normalizePayload(payload: Partial<LostFoundPayload>): LostFoundPayload | null {
@@ -27,7 +26,7 @@ function normalizePayload(payload: Partial<LostFoundPayload>): LostFoundPayload 
     itemPhoto: payload.itemPhoto.trim(),
     roomNumber: payload.roomNumber,
     remark: payload.remark,
-    createdBy: payload.createdBy,
+    createdBy: payload.createdBy.trim(),
     pickupHandle: payload.pickupHandle?.trim() ?? "",
     pickupDocumentation: payload.pickupDocumentation?.trim() ?? "",
     status: payload.status,
@@ -71,16 +70,12 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       return NextResponse.json({ message: "Data tidak ditemukan." }, { status: 404 });
     }
 
-    if (normalizedPayload.pickupHandle) {
-      await prisma.pickupHandle.upsert({
-        where: {
-          name: normalizedPayload.pickupHandle,
-        },
-        update: {},
-        create: {
-          name: normalizedPayload.pickupHandle,
-        },
-      });
+      if (normalizedPayload.pickupHandle) {
+        await upsertPickupHandleName(normalizedPayload.pickupHandle);
+      }
+
+      if (normalizedPayload.createdBy) {
+        await upsertPickupHandleName(normalizedPayload.createdBy);
     }
 
     return NextResponse.json(updated);

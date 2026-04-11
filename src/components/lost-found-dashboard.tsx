@@ -72,6 +72,16 @@ function LogoutIcon({ className = "h-4 w-4" }: IconProps) {
   );
 }
 
+function LoginIcon({ className = "h-4 w-4" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className} aria-hidden="true">
+      <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+      <path d="M10 17l5-5-5-5" />
+      <path d="M15 12H3" />
+    </svg>
+  );
+}
+
 function FileDownIcon({ className = "h-4 w-4" }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className} aria-hidden="true">
@@ -333,6 +343,7 @@ export function LostFoundDashboard() {
       icon: "success",
       title: "Berhasil logout",
     });
+    router.push("/login");
   }
 
   async function handleUpdatePassword(e: FormEvent<HTMLFormElement>) {
@@ -576,7 +587,7 @@ export function LostFoundDashboard() {
     const periodText = `Periode: ${formatDate(new Date(dateFrom).toISOString())} - ${formatDate(new Date(dateTo).toISOString())}`;
 
     doc.setFontSize(14);
-    doc.text("Laporan Lost & Found", pageWidth / 2, 30, { align: "center" });
+    doc.text("Laporan Lost & Found - FrontOne & Azana Style Madura", pageWidth / 2, 30, { align: "center" });
     doc.setFontSize(10);
     doc.text(periodText, pageWidth / 2, 46, { align: "center" });
 
@@ -659,10 +670,10 @@ export function LostFoundDashboard() {
         <div className="bg-gradient-to-r from-brand-900 via-brand-800 to-brand-700 p-6 text-white sm:p-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <p className="text-sm uppercase tracking-[0.18em] text-white/80">Hotel Ops</p>
-              <h1 className="mt-2 text-2xl font-bold sm:text-3xl">Lost & Found Tracker</h1>
+              <p className="text-sm uppercase tracking-[0.18em] text-white/80">FrontOne & Azana Style Madura</p>
+              <h1 className="mt-2 text-2xl font-bold sm:text-3xl">Lost & Found</h1>
               <p className="mt-2 text-sm text-white/85 sm:text-base">
-                Catat barang tamu yang tertinggal, pantau status pickup, dan simpan dokumentasi serah terima.
+                Catatan barang tamu yang tertinggal, pantau status pickup, dan dokumentasi serah terima.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -685,7 +696,16 @@ export function LostFoundDashboard() {
                     Logout
                   </button>
                 </>
-              ) : null}
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => router.push("/login")}
+                  className="inline-flex items-center gap-2 rounded-xl border border-white/40 bg-white/15 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/25"
+                >
+                  <LoginIcon />
+                  Login
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -772,8 +792,6 @@ export function LostFoundDashboard() {
           </button>
         </div>
 
-        {loading ? <p className="text-sm text-slate-500">Memuat data...</p> : null}
-
         <div className="hidden overflow-x-auto lg:block">
           <table className="min-w-full divide-y divide-slate-200 text-sm">
             <thead>
@@ -794,6 +812,13 @@ export function LostFoundDashboard() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
+              {loading ? (
+                <tr>
+                  <td colSpan={tableColSpan} className="px-2 py-6 text-center text-sm text-slate-500">
+                    Memuat data...
+                  </td>
+                </tr>
+              ) : null}
               {!loading && filteredItems.length === 0 ? (
                 <tr>
                   <td colSpan={tableColSpan} className="px-2 py-6 text-center text-sm text-slate-500">
@@ -1106,7 +1131,8 @@ export function LostFoundDashboard() {
                 <span className="mb-1 block text-xs font-medium text-slate-600">Dibuat Oleh</span>
                 <input
                   className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
-                  placeholder="Nama penemu"
+                  placeholder="Pilih atau ketik nama pembuat"
+                  list="pickup-handle-options"
                   value={form.createdBy}
                   onChange={(e) => setForm({ ...form, createdBy: e.target.value })}
                   required

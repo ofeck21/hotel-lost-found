@@ -5,8 +5,6 @@ import { prisma } from "@/lib/prisma";
 
 export const AUTH_COOKIE_NAME = "lf_auth";
 
-const LOGIN_USERNAME = process.env.LOGIN_USERNAME ?? "admin";
-const LOGIN_PASSWORD = process.env.LOGIN_PASSWORD ?? "hotel123";
 const AUTH_SESSION_SECRET = process.env.AUTH_SESSION_SECRET ?? "lostfound-session-secret";
 
 function signUserId(userId: string): string {
@@ -28,28 +26,7 @@ function parseSessionToken(token: string): string | null {
   return signature === expectedSignature ? userId : null;
 }
 
-export async function ensureDefaultUser(): Promise<void> {
-  const existing = await prisma.user.findUnique({
-    where: { username: LOGIN_USERNAME },
-    select: { id: true },
-  });
-
-  if (existing) {
-    return;
-  }
-
-  const passwordHash = await hash(LOGIN_PASSWORD, 10);
-  await prisma.user.create({
-    data: {
-      username: LOGIN_USERNAME,
-      passwordHash,
-    },
-  });
-}
-
 export async function validateCredentials(username: string, password: string): Promise<{ valid: boolean; userId?: string }> {
-  await ensureDefaultUser();
-
   const user = await prisma.user.findUnique({
     where: { username },
     select: {

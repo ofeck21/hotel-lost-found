@@ -56,19 +56,27 @@ export default function LoginPage() {
 
   return (
     <main className="flex min-h-screen items-center justify-center px-4 py-10">
-      <section className="card w-full max-w-md p-6 shadow-float sm:p-8">
-        <p className="text-xs uppercase tracking-[0.16em] text-brand-700">Hotel Lost & Found</p>
-        <h1 className="mt-2 text-2xl font-bold text-slate-800">Login Akses Petugas</h1>
+      <section className="card w-full max-w-md p-6 shadow-float sm:p-8 text-center">
+        <p className="text-xs uppercase tracking-[0.16em] text-brand-700">FrontOne & Azana Style Madura</p>
+        <h1 className="mt-2 text-2xl font-bold text-slate-800">Login To Your Account</h1>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-3">
+            <label htmlFor="username" className="sr-only">
+              Username
+            </label>
           <input
+            id="username"
             className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
             placeholder="Username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
           />
+            <label htmlFor="password" className="sr-only">
+              Password
+            </label>
           <input
+            id="password"
             type="password"
             className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
             placeholder="Password"

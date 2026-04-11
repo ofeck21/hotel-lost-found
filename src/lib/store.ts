@@ -135,3 +135,20 @@ export async function deleteItem(id: string): Promise<boolean> {
   await deleteUploadAsset(existing.pickupDocumentation);
   return true;
 }
+
+export async function upsertPickupHandleName(name: string): Promise<void> {
+  const normalized = name.trim();
+  if (!normalized) {
+    return;
+  }
+
+  await prisma.pickupHandle.upsert({
+    where: {
+      name: normalized,
+    },
+    update: {},
+    create: {
+      name: normalized,
+    },
+  });
+}

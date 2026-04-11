@@ -87,5 +87,5 @@ Bisa diubah lewat `.env.local`.
 
 - Data disimpan di database MySQL melalui Prisma.
 - Credential login disimpan di tabel `users`.
-- User default otomatis dibuat dari `LOGIN_USERNAME` dan `LOGIN_PASSWORD` saat login pertama jika belum ada data user.
+- Login dibaca langsung dari tabel `users` (tidak menggunakan `LOGIN_USERNAME` / `LOGIN_PASSWORD` dari env).
 - File foto upload disimpan di `public/uploads`.
