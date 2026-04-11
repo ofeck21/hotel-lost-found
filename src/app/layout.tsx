@@ -1,12 +1,15 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { PwaRegister } from "@/components/pwa-register";
 import "./globals.css";
+
+export const viewport: Viewport = {
+  themeColor: "#8a0303",
+};
 
 export const metadata: Metadata = {
   title: "Lost & Found - FrontOne & Azana Style Madura",
   description: "Pencatatan barang tamu yang tertinggal di Hotel FrontOne & Azana Style Madura",
   manifest: "/manifest.webmanifest",
-  themeColor: "#8a0303",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
