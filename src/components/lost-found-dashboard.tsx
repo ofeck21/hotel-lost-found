@@ -304,9 +304,17 @@ export function LostFoundDashboard() {
   }
 
   async function checkSession() {
-    const response = await fetch("/api/auth/session", { cache: "no-store" });
-    const data = (await response.json()) as { authenticated: boolean };
-    setIsAuthenticated(data.authenticated);
+    try {
+      const response = await fetch("/api/auth/session", { cache: "no-store" });
+      if (!response.ok) {
+        setIsAuthenticated(false);
+        return;
+      }
+      const data = (await response.json()) as { authenticated: boolean };
+      setIsAuthenticated(data.authenticated);
+    } catch {
+      setIsAuthenticated(false);
+    }
   }
 
   async function loadPickupHandleOptions() {

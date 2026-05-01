@@ -5,13 +5,25 @@ const LEGACY_UPLOAD_PREFIX = "/uploads/";
 
 export function getUploadsDir(): string {
   const configured = process.env.UPLOAD_DIR?.trim();
-  if (!configured) {
-    return path.join(process.cwd(), "public", "uploads");
+  const resolved = configured
+    ? path.isAbsolute(configured)
+      ? configured
+      : path.join(process.cwd(), configured)
+    : path.join(process.cwd(), "public", "uploads");
+
+  if (
+    process.env.NODE_ENV === "production" &&
+    resolved.startsWith(process.cwd())
+  ) {
+    console.warn(
+      "[LostFound] WARNING: UPLOAD_DIR is inside the app directory (" +
+        resolved +
+        "). Uploaded files WILL BE LOST on redeploy. " +
+        "Set UPLOAD_DIR to a persistent absolute path outside the app, e.g. /home/user/uploads",
+    );
   }
 
-  return path.isAbsolute(configured)
-    ? configured
-    : path.join(process.cwd(), configured);
+  return resolved;
 }
 
 export function uploadUrlFromFileName(fileName: string): string {
