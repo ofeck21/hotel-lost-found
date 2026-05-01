@@ -186,6 +186,16 @@ function SaveIcon({ className = "h-4 w-4" }: IconProps) {
   );
 }
 
+function PrintIcon({ className = "h-4 w-4" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className} aria-hidden="true">
+      <path d="M6 9V2h12v7" />
+      <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+      <path d="M6 14h12v8H6z" />
+    </svg>
+  );
+}
+
 export function LostFoundDashboard() {
   const router = useRouter();
   const allowedImageTypes = ["image/png", "image/jpeg", "image/webp"];
@@ -563,6 +573,106 @@ export function LostFoundDashboard() {
     });
   }
 
+  async function handlePrintItem(item: LostFoundItem) {
+    const toDataUrl = async (url: string): Promise<string | null> => {
+      const normalizedUrl = normalizeAssetUrl(url);
+      if (!normalizedUrl) return null;
+      try {
+        const response = await fetch(normalizedUrl);
+        if (!response.ok) return null;
+        const blob = await response.blob();
+        return await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(typeof reader.result === "string" ? reader.result : "");
+          reader.onerror = () => reject(new Error("Gagal membaca gambar"));
+          reader.readAsDataURL(blob);
+        });
+      } catch {
+        return null;
+      }
+    };
+
+    const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 40;
+    const contentWidth = pageWidth - margin * 2;
+
+    // Header
+    doc.setFontSize(16);
+    doc.setFont("helvetica", "bold");
+    doc.text("Lost & Found", margin, 52);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(100, 116, 139);
+    doc.text("FrontOne & Azana Style Madura", margin, 66);
+    doc.setDrawColor(226, 232, 240);
+    doc.line(margin, 76, pageWidth - margin, 76);
+
+    // Fetch photo
+    const photoDataUrl = item.itemPhoto ? await toDataUrl(item.itemPhoto) : null;
+
+    // Layout: details left, photo right
+    const photoColWidth = photoDataUrl ? 160 : 0;
+    const detailsWidth = photoDataUrl ? contentWidth - photoColWidth - 16 : contentWidth;
+    const startY = 92;
+
+    const rows: [string, string][] = [
+      ["Nama Tamu", item.guestName],
+      ["Check In", formatDate(item.checkIn)],
+      ["Check Out", formatDate(item.checkOut)],
+      ["Barang", item.itemName],
+      ["No Kamar", item.roomNumber],
+      ["Remark", item.remark],
+      ["Dibuat Oleh", item.createdBy],
+      ["Pickup Handle", item.pickupHandle || "-"],
+      ["Keterangan", item.status],
+    ];
+
+    const labelWidth = 100;
+    const rowHeight = 22;
+    doc.setFontSize(9);
+
+    rows.forEach(([label, value], i) => {
+      const y = startY + i * rowHeight;
+
+      // label
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(71, 85, 105);
+      doc.text(label, margin, y);
+
+      // value
+      doc.setFont("helvetica", "normal");
+      if (label === "Keterangan") {
+        const isDone = value === "Sudah Diambil";
+        doc.setTextColor(isDone ? 22 : 146, isDone ? 101 : 64, isDone ? 52 : 14);
+      } else {
+        doc.setTextColor(30, 41, 59);
+      }
+      const lines = doc.splitTextToSize(value, detailsWidth - labelWidth - 8);
+      doc.text(lines as string[], margin + labelWidth, y);
+
+      // row separator
+      doc.setDrawColor(241, 245, 249);
+      doc.line(margin, y + 8, margin + detailsWidth, y + 8);
+    });
+
+    // Photo on the right
+    if (photoDataUrl) {
+      const photoX = margin + detailsWidth + 16;
+      const photoY = startY - 4;
+      const photoW = photoColWidth;
+      const photoH = photoColWidth * 0.75;
+      const format = photoDataUrl.startsWith("data:image/png") ? "PNG" : "JPEG";
+      doc.addImage(photoDataUrl, format, photoX, photoY, photoW, photoH);
+      doc.setFontSize(8);
+      doc.setTextColor(148, 163, 184);
+      doc.setFont("helvetica", "normal");
+      doc.text("Foto Barang", photoX + photoW / 2, photoY + photoH + 12, { align: "center" });
+    }
+
+    doc.save(`lost-found-${item.guestName.replace(/\s+/g, "-").toLowerCase()}.pdf`);
+  }
+
   async function handleExportPdf() {
     const exportItems = filteredItems;
 
@@ -916,6 +1026,14 @@ export function LostFoundDashboard() {
                         </button>
                         <button
                           type="button"
+                          onClick={() => handlePrintItem(item)}
+                          className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700"
+                        >
+                          <PrintIcon className="h-3.5 w-3.5" />
+                          Cetak
+                        </button>
+                        <button
+                          type="button"
                           onClick={() => handleDelete(item.id)}
                           className="inline-flex items-center gap-1 rounded-lg border border-rose-200 px-2 py-1 text-xs font-medium text-rose-700"
                         >
@@ -1002,6 +1120,14 @@ export function LostFoundDashboard() {
                   >
                     <EditIcon className="h-3.5 w-3.5" />
                     Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handlePrintItem(item)}
+                    className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700"
+                  >
+                    <PrintIcon className="h-3.5 w-3.5" />
+                    Cetak
                   </button>
                   <button
                     type="button"
