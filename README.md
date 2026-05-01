@@ -88,4 +88,23 @@ Bisa diubah lewat `.env.local`.
 - Data disimpan di database MySQL melalui Prisma.
 - Credential login disimpan di tabel `users`.
 - Login dibaca langsung dari tabel `users` (tidak menggunakan `LOGIN_USERNAME` / `LOGIN_PASSWORD` dari env).
-- File foto upload disimpan di `public/uploads`.
+- File foto upload disimpan di folder `UPLOAD_DIR`.
+
+## Konfigurasi Upload Agar Aman Saat Redeploy
+
+Secara default, jika `UPLOAD_DIR` tidak diisi maka upload disimpan ke `public/uploads`.
+
+Untuk production, wajib arahkan `UPLOAD_DIR` ke storage persistent (volume/mount path), contoh:
+
+```env
+UPLOAD_DIR=/var/lib/lostfound/uploads
+```
+
+Checklist deploy:
+
+1. Buat folder persistent di server.
+2. Mount folder tersebut ke container/app (jika pakai Docker/PM2 setup custom).
+3. Set env `UPLOAD_DIR` ke path folder mount.
+4. Redeploy aplikasi.
+
+Jika langkah di atas sudah dilakukan, file upload tidak ikut hilang saat aplikasi di-redeploy.
